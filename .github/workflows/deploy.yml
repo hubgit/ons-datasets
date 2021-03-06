@@ -1,0 +1,39 @@
+name: Build and deploy
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+    - uses: actions/cache@v2
+      name: Configure pip caching
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+    - name: Install Python dependencies
+      run: |
+        pip install -r requirements.txt
+    - name: Build core.db
+      run: |
+        sqlite-utils insert --csv --pk=calendar-years --pk=week-number --pk=administrative-geography --pk=recorded-deaths ons.db weekly-deaths-region weekly-deaths-historical.csv
+        sqlite-utils insert --csv --alter ons.db weekly-deaths-region weekly-deaths-region.csv
+    - name: Set up Cloud Run
+      uses: google-github-actions/setup-gcloud@master
+      with:
+        version: '330.0.0'
+        project_id: ${{ secrets.GCP_PROJECT_ID }}
+        service_account_key: ${{ secrets.GCP_SA_KEY }}
+        export_default_credentials: true
+    - name: Deploy to Cloud Run
+      run: |-
+        gcloud config set run/region europe-west1
+        datasette publish cloudrun ons.db --metadata=metadata.yml --install=datasette-block-robots --service=ons-datasets
