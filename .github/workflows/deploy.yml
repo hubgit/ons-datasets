@@ -24,8 +24,7 @@ jobs:
         pip install -r requirements.txt
     - name: Build core.db
       run: |
-        sqlite-utils insert --csv --pk=calendar-years --pk=week-number --pk=administrative-geography --pk=recorded-deaths ons.db weekly-deaths-region weekly-deaths-historical.csv
-        sqlite-utils insert --csv --alter ons.db weekly-deaths-region weekly-deaths-region.csv
+        ./build.sh
     - name: Set up Cloud Run
       uses: google-github-actions/setup-gcloud@master
       with:
