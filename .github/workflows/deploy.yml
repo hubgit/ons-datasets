@@ -35,4 +35,4 @@ jobs:
     - name: Deploy to Cloud Run
       run: |-
         gcloud config set run/region europe-west1
-        datasette publish cloudrun ons.db --metadata=metadata.yml --install=datasette-block-robots --service=ons-datasets
+        datasette publish cloudrun ons.db --service=ons-datasets --metadata=metadata.yml --install=datasette-block-robots --install=datasette-vega
